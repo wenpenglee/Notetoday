@@ -21,5 +21,5 @@ interface NoteDao {
     fun queryAllNotes():Flow<List<Note>>
 
     @Query("SELECT * FROM notes WHERE id = :id")
-    fun queryNoteWithId(): Note?
+    fun queryNoteWithId(id: Uuid): Note?
 }
