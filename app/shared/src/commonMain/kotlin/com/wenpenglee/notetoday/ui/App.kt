@@ -19,15 +19,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.wenpenglee.notetoday.data.Note
+import com.wenpenglee.notetoday.data.getDatabaseBuilder
+import kotlinx.coroutines.launch
 
 import kotlin.uuid.Uuid
 
 @Composable
 @Preview
 fun App() {
+    val db = remember { getDatabaseBuilder().build() }
+    val noteDao = remember { db.noteDao() }
+    val scope = rememberCoroutineScope()
     MaterialTheme {
         var inputText by remember { mutableStateOf("") }
-        val notes = remember { mutableStateListOf<Note>() }
+        val notes by noteDao.queryAllNotes().collectAsState(initial = emptyList())
         var editingNoteId by remember { mutableStateOf<Uuid?>(null) }
         Column {
             Text("My Note")
@@ -44,12 +49,16 @@ fun App() {
                         print("Empty input")
                         return@Button
                     }
-                    if (editingNoteId != null) {
-                        val index = notes.indexOfFirst { it.id == editingNoteId }
-                        notes[index] = notes[index].copy(content = inputText)
-                        editingNoteId = null
-                    } else {
-                        notes.add(Note(content = inputText, id = Uuid.random()))
+                    scope.launch {
+                        if (editingNoteId != null) {
+                            val existingNote = notes.find { it.id == editingNoteId }
+                            existingNote?.let {
+                                noteDao.updateNote(existingNote.copy(content = inputText))
+                            }
+                            editingNoteId = null
+                        } else {
+                            noteDao.insertNote(Note(id = Uuid.random(), content = inputText))
+                        }
                     }
                     inputText = ""
                 }) {
@@ -83,7 +92,9 @@ fun App() {
                                     )
                                 }
                                 IconButton(onClick = {
-                                    notes.remove(note)
+                                    scope.launch {
+                                        noteDao.deleteNote(note)
+                                    }
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
