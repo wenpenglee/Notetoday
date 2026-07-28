@@ -33,7 +33,7 @@ fun App() {
     MaterialTheme {
         var inputText by remember { mutableStateOf("") }
         val notes by noteDao.queryAllNotes().collectAsState(initial = emptyList())
-        var editingNoteId by remember { mutableStateOf<Uuid?>(null) }
+        var editingNoteId by remember { mutableStateOf<String?>(null) }
         Column {
             Text("My Note")
 
@@ -45,7 +45,7 @@ fun App() {
                     inputText = it
                 })
                 Button(onClick = {
-                    if (inputText == "") {
+                    if (inputText.isBlank()) {
                         print("Empty input")
                         return@Button
                     }
@@ -57,10 +57,10 @@ fun App() {
                             }
                             editingNoteId = null
                         } else {
-                            noteDao.insertNote(Note(id = Uuid.random(), content = inputText))
+                            noteDao.insertNote(Note(id = Uuid.random().toString(), content = inputText))
                         }
+                        inputText = ""
                     }
-                    inputText = ""
                 }) {
                     if (editingNoteId != null) {
                         Text("Save")

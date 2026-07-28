@@ -6,6 +6,6 @@ import kotlin.uuid.Uuid
 
 @Entity(tableName = "notes")
 data class Note(
-    @PrimaryKey val id: Uuid,
+    @PrimaryKey val id: String,
     val content: String
 )
