@@ -2,7 +2,6 @@ package com.wenpenglee.notetoday.data
 
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
-import kotlin.uuid.Uuid
 
 @Entity(tableName = "notes")
 data class Note(

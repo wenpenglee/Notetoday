@@ -18,6 +18,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.wenpenglee.notetoday.data.Note
 import com.wenpenglee.notetoday.data.getDatabaseBuilder
 import kotlinx.coroutines.launch
@@ -27,7 +28,7 @@ import kotlin.uuid.Uuid
 @Composable
 @Preview
 fun App() {
-    val db = remember { getDatabaseBuilder().build() }
+    val db = remember { getDatabaseBuilder().setDriver(BundledSQLiteDriver()).build() }
     val noteDao = remember { db.noteDao() }
     val scope = rememberCoroutineScope()
     MaterialTheme {
