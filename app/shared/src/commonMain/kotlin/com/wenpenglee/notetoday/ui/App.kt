@@ -30,39 +30,56 @@ import kotlin.uuid.Uuid
 @Composable
 @Preview
 fun App() {
-    val db = remember { getDatabaseBuilder().setDriver(BundledSQLiteDriver()).build() }
+    val db = remember {
+        getDatabaseBuilder()
+            .setDriver(BundledSQLiteDriver())
+            .fallbackToDestructiveMigration(true)
+            .build()
+    }
     val noteDao = remember { db.noteDao() }
     val scope = rememberCoroutineScope()
     MaterialTheme {
-        var inputText by remember { mutableStateOf("") }
+        var contentInput by remember { mutableStateOf("") }
+        var titleInput by remember { mutableStateOf("") }
         val notes by noteDao.queryAllNotes().collectAsState(initial = emptyList())
         var editingNoteId by remember { mutableStateOf<String?>(null) }
         Column {
-            Text("My Note")
+            Text(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+
+                text = "My Note"
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                TextField(value = inputText, label = { Text("Title") }, onValueChange = {
-                    inputText = it
-                })
+                Column {
+                    TextField(value = titleInput, label = { Text("Title") }, onValueChange = {
+                        titleInput = it
+                    })
+                    TextField(value = contentInput, label = { Text("Content") }, onValueChange = {
+                        contentInput = it
+                    })
+                }
+
                 Button(onClick = {
-                    if (inputText.isBlank()) {
-                        print("Empty input")
+                    if (titleInput.isBlank()) {
+                        print("Empty Title input")
                         return@Button
                     }
                     scope.launch {
                         if (editingNoteId != null) {
                             val existingNote = notes.find { it.id == editingNoteId }
                             existingNote?.let {
-                                noteDao.updateNote(existingNote.copy(content = inputText))
+                                noteDao.updateNote(existingNote.copy(title = titleInput, content = contentInput))
                             }
                             editingNoteId = null
                         } else {
-                            noteDao.insertNote(Note(id = Uuid.random().toString(), content = inputText))
+                            noteDao.insertNote(Note(id = Uuid.random().toString(), title = titleInput, content = contentInput))
                         }
-                        inputText = ""
+                        titleInput = ""
+                        contentInput = ""
                     }
                 }) {
                     if (editingNoteId != null) {
@@ -89,11 +106,15 @@ fun App() {
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(note.content)
+                            Column {
+                                Text(note.title)
+                                Text(note.content)
+                            }
+
                             Row {
                                 IconButton(onClick = {
                                     editingNoteId = note.id
-                                    inputText = note.content
+                                    contentInput = note.content
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
