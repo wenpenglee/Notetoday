@@ -22,15 +22,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.wenpenglee.notetoday.data.Note
 import com.wenpenglee.notetoday.data.getDatabaseBuilder
+import com.wenpenglee.notetoday.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 
 import kotlin.uuid.Uuid
@@ -47,7 +50,7 @@ fun App() {
     val noteDao = remember { db.noteDao() }
     val scope = rememberCoroutineScope()
 
-    MaterialTheme {
+    AppTheme {
         var contentInput by remember { mutableStateOf("") }
         var titleInput by remember { mutableStateOf("") }
         val notes by noteDao.queryAllNotes().collectAsState(initial = emptyList())
@@ -167,3 +170,17 @@ fun App() {
     }
 }
 
+private val NoteColorScheme = lightColorScheme(
+    primary = Color(0xFF4A6B5C),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFD9E5DC),
+    onPrimaryContainer = Color(0xFF16261D),
+    secondary = Color(0xFF52664D),
+    background = Color(0xFFFBF9F4),
+    onBackground = Color(0xFF2A2E2B),
+    surface = Color(0xFFFBF9F4),
+    onSurface = Color(0xFF2A2E2B),
+    surfaceVariant = Color(0xFFEEF0EA),
+    onSurfaceVariant = Color(0xFF3F4A3D),
+    outline = Color(0xFF8A9088)
+)
