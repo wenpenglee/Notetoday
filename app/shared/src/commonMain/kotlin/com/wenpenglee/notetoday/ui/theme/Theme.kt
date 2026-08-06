@@ -2,6 +2,7 @@ package com.wenpenglee.notetoday.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
@@ -256,7 +257,7 @@ expect fun dynamicColorScheme(darkTheme: Boolean): androidx.compose.material3.Co
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable() () -> Unit
 ) {
   val colorScheme = (if (dynamicColor) dynamicColorScheme(darkTheme) else null)
@@ -265,7 +266,13 @@ fun AppTheme(
   MaterialTheme(
     colorScheme = colorScheme,
     typography = AppTypography,
-    content = content
-  )
+  ) {
+      Surface(
+          color = MaterialTheme.colorScheme.background,
+          contentColor = MaterialTheme.colorScheme.onBackground
+      ) {
+          content()
+      }
+  }
 }
 

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -22,11 +21,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,54 +66,35 @@ fun App() {
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                TextField(
-                    value = titleInput,
-                    label = { Text("標題") },
-                    onValueChange = { titleInput = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = contentInput,
-                    label = { Text("內容") },
-                    onValueChange = { contentInput = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        if (titleInput.isBlank() && contentInput.isBlank()) {
-                            return@Button
-                        }
-                        scope.launch {
-                            if (editingNoteId != null) {
-                                val existingNote = notes.find { it.id == editingNoteId }
-                                existingNote?.let {
-                                    noteDao.updateNote(
-                                        it.copy(
-                                            title = titleInput,
-                                            content = contentInput
-                                        )
-                                    )
-                                }
-                                editingNoteId = null
-                            } else {
-                                noteDao.insertNote(
-                                    Note(
-                                        id = Uuid.random().toString(),
+                NoteEditorScreen(titleInput, contentInput,  { title, content ->
+                    if (titleInput.isBlank() && contentInput.isBlank()) {
+                        return@NoteEditorScreen
+                    }
+                    scope.launch {
+                        if (editingNoteId != null) {
+                            val existingNote = notes.find { it.id == editingNoteId }
+                            existingNote?.let {
+                                noteDao.updateNote(
+                                    it.copy(
                                         title = titleInput,
                                         content = contentInput
                                     )
                                 )
                             }
-                            titleInput = ""
-                            contentInput = ""
+                            editingNoteId = null
+                        } else {
+                            noteDao.insertNote(
+                                Note(
+                                    id = Uuid.random().toString(),
+                                    title = titleInput,
+                                    content = contentInput
+                                )
+                            )
                         }
-                    },
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(if (editingNoteId != null) "Save" else "Add")
-                }
+                        titleInput = ""
+                        contentInput = ""
+                    }
+                })
             }
 
             LazyVerticalGrid(
@@ -170,17 +148,41 @@ fun App() {
     }
 }
 
-private val NoteColorScheme = lightColorScheme(
-    primary = Color(0xFF4A6B5C),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFD9E5DC),
-    onPrimaryContainer = Color(0xFF16261D),
-    secondary = Color(0xFF52664D),
-    background = Color(0xFFFBF9F4),
-    onBackground = Color(0xFF2A2E2B),
-    surface = Color(0xFFFBF9F4),
-    onSurface = Color(0xFF2A2E2B),
-    surfaceVariant = Color(0xFFEEF0EA),
-    onSurfaceVariant = Color(0xFF3F4A3D),
-    outline = Color(0xFF8A9088)
-)
+@Composable
+private fun NoteEditorScreen(
+    initialTitle: String,
+    initialContent: String,
+    onSave: (String, String) -> Unit
+    )
+{
+    var titleInput by remember {
+        mutableStateOf(initialTitle)
+    }
+    var contentInput by remember {
+        mutableStateOf(initialContent)
+    }
+
+    TextField(
+        value = titleInput,
+        label = { Text("標題") },
+        onValueChange = { titleInput = it },
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    TextField(
+        value = contentInput,
+        label = { Text("內容") },
+        onValueChange = { contentInput = it },
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Button(
+        onClick = {
+            onSave(titleInput, contentInput)
+        },
+        modifier = Modifier.align(Alignment.End)
+    ) {
+        Text(if (editingNoteId != null) "Save" else "Add")
+    }
+}
