@@ -52,6 +52,7 @@ fun App() {
         var titleInput by remember { mutableStateOf("") }
         val notes by noteDao.queryAllNotes().collectAsState(initial = emptyList())
         var editingNoteId by remember { mutableStateOf<String?>(null) }
+        val isEditMode = editingNoteId != null
         Column(modifier = Modifier.padding(24.dp)) {
             Text(
                 "My Note",
@@ -61,13 +62,13 @@ fun App() {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-                NoteEditorScreen(titleInput, contentInput,  { title, content ->
-                    if (titleInput.isBlank() && contentInput.isBlank()) {
+
+            NoteEditorScreen(
+                initialTitle = titleInput,
+                initialContent = contentInput,
+                isEditMode = isEditMode,
+                onSave = { title, content ->
+                    if (title.isBlank() && content.isBlank()) {
                         return@NoteEditorScreen
                     }
                     scope.launch {
@@ -76,8 +77,8 @@ fun App() {
                             existingNote?.let {
                                 noteDao.updateNote(
                                     it.copy(
-                                        title = titleInput,
-                                        content = contentInput
+                                        title = title,
+                                        content = content
                                     )
                                 )
                             }
@@ -86,8 +87,8 @@ fun App() {
                             noteDao.insertNote(
                                 Note(
                                     id = Uuid.random().toString(),
-                                    title = titleInput,
-                                    content = contentInput
+                                    title = title,
+                                    content = content
                                 )
                             )
                         }
@@ -95,7 +96,7 @@ fun App() {
                         contentInput = ""
                     }
                 })
-            }
+
 
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 160.dp),
@@ -112,7 +113,7 @@ fun App() {
                         ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Column (modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
 
                             Text(
                                 note.title,
@@ -125,13 +126,17 @@ fun App() {
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Row (horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()){
+                            Row(
+                                horizontalArrangement = Arrangement.End,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 IconButton(onClick = {
                                     editingNoteId = note.id
                                     titleInput = note.title
                                     contentInput = note.content
                                 }) {
-                                    Icon(Icons.Default.Edit, contentDescription = "編輯"
+                                    Icon(
+                                        Icons.Default.Edit, contentDescription = "編輯"
                                     )
                                 }
                                 IconButton(onClick = {
@@ -152,9 +157,9 @@ fun App() {
 private fun NoteEditorScreen(
     initialTitle: String,
     initialContent: String,
+    isEditMode: Boolean,
     onSave: (String, String) -> Unit
-    )
-{
+) {
     var titleInput by remember {
         mutableStateOf(initialTitle)
     }
@@ -162,27 +167,33 @@ private fun NoteEditorScreen(
         mutableStateOf(initialContent)
     }
 
-    TextField(
-        value = titleInput,
-        label = { Text("標題") },
-        onValueChange = { titleInput = it },
-        modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-    TextField(
-        value = contentInput,
-        label = { Text("內容") },
-        onValueChange = { contentInput = it },
-        modifier = Modifier.fillMaxWidth()
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-
-    Button(
-        onClick = {
-            onSave(titleInput, contentInput)
-        },
-        modifier = Modifier.align(Alignment.End)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
     ) {
-        Text(if (editingNoteId != null) "Save" else "Add")
+        TextField(
+            value = titleInput,
+            label = { Text("標題") },
+            onValueChange = { titleInput = it },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        TextField(
+            value = contentInput,
+            label = { Text("內容") },
+            onValueChange = { contentInput = it },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = {
+                onSave(titleInput, contentInput)
+            },
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text(if (isEditMode) "Save" else "Add")
+        }
     }
 }
