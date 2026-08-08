@@ -64,11 +64,11 @@ fun App() {
 
 
             NoteEditorScreen(
-                initialTitle = titleInput,
-                initialContent = contentInput,
+                titleInput,
+                contentInput,
                 isEditMode = isEditMode,
-                onSave = { title, content ->
-                    if (title.isBlank() && content.isBlank()) {
+                onSave = {
+                    if (titleInput.isBlank() && contentInput.isBlank()) {
                         return@NoteEditorScreen
                     }
                     scope.launch {
@@ -77,8 +77,8 @@ fun App() {
                             existingNote?.let {
                                 noteDao.updateNote(
                                     it.copy(
-                                        title = title,
-                                        content = content
+                                        title = titleInput,
+                                        content = contentInput
                                     )
                                 )
                             }
@@ -87,15 +87,22 @@ fun App() {
                             noteDao.insertNote(
                                 Note(
                                     id = Uuid.random().toString(),
-                                    title = title,
-                                    content = content
+                                    title = titleInput,
+                                    content = contentInput
                                 )
                             )
                         }
                         titleInput = ""
                         contentInput = ""
                     }
-                })
+                },
+                onTitleChange = {
+                    titleInput = it
+                },
+                onContentChange = {
+                    contentInput = it
+                }
+            )
 
 
             LazyVerticalGrid(
@@ -155,17 +162,14 @@ fun App() {
 
 @Composable
 private fun NoteEditorScreen(
-    initialTitle: String,
-    initialContent: String,
+    title: String,
+    content: String,
     isEditMode: Boolean,
-    onSave: (String, String) -> Unit
+    onSave: () -> Unit,
+    onTitleChange: (String) -> Unit,
+    onContentChange: (String) -> Unit
 ) {
-    var titleInput by remember {
-        mutableStateOf(initialTitle)
-    }
-    var contentInput by remember {
-        mutableStateOf(initialContent)
-    }
+
 
     Column(
         modifier = Modifier
@@ -173,24 +177,22 @@ private fun NoteEditorScreen(
             .padding(24.dp)
     ) {
         TextField(
-            value = titleInput,
+            value = title,
             label = { Text("標題") },
-            onValueChange = { titleInput = it },
+            onValueChange = onTitleChange,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
         TextField(
-            value = contentInput,
+            value = content,
             label = { Text("內容") },
-            onValueChange = { contentInput = it },
+            onValueChange = onContentChange,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = {
-                onSave(titleInput, contentInput)
-            },
+            onClick = onSave,
             modifier = Modifier.align(Alignment.End)
         ) {
             Text(if (isEditMode) "Save" else "Add")
