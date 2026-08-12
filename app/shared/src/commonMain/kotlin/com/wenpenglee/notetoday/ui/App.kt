@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -62,12 +63,25 @@ fun App() {
 
         Scaffold(
             floatingActionButton = {
-                FloatingActionButton(onClick = { currentScreen}) {
-                    Icon(Icons.Default.Add, contentDescription = "新增筆記")
+                if (currentScreen == Screen.List) {
+                    FloatingActionButton(
+                        onClick = {
+                            currentScreen = Screen.Edit
+                            titleInput = ""
+                            contentInput = ""
+                        }
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "新增筆記")
+                    }
                 }
             }
         ) { innerPadding ->
-            Column(modifier = Modifier.padding(innerPadding)) {
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(24.dp)
+            )
+            {
                 Text(
                     "My Note",
                     style = MaterialTheme.typography.headlineMedium,
@@ -76,106 +90,114 @@ fun App() {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-
-                NoteEditorScreen(
-                    titleInput,
-                    contentInput,
-                    isEditMode = isEditMode,
-                    onSave = {
-                        if (titleInput.isBlank() && contentInput.isBlank()) {
-                            return@NoteEditorScreen
-                        }
-                        scope.launch {
-                            if (editingNoteId != null) {
-                                val existingNote = notes.find { it.id == editingNoteId }
-                                existingNote?.let {
-                                    noteDao.updateNote(
-                                        it.copy(
-                                            title = titleInput,
-                                            content = contentInput
-                                        )
-                                    )
-                                }
-                                editingNoteId = null
-                            } else {
-                                noteDao.insertNote(
-                                    Note(
-                                        id = Uuid.random().toString(),
-                                        title = titleInput,
-                                        content = contentInput
-                                    )
-                                )
-                            }
-                            titleInput = ""
-                            contentInput = ""
-                        }
-                    },
-                    onTitleChange = {
-                        titleInput = it
-                    },
-                    onContentChange = {
-                        contentInput = it
-                    }
-                )
-
-
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 160.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(
-                        notes,
-                        key = { it.id }
-                    ) { note ->
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                when (currentScreen) {
+                    Screen.List -> {
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 160.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-
-                                Text(
-                                    note.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    note.content,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.End,
-                                    modifier = Modifier.fillMaxWidth()
+                            items(
+                                notes,
+                                key = { it.id }
+                            ) { note ->
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    ),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                 ) {
-                                    IconButton(onClick = {
-                                        editingNoteId = note.id
-                                        titleInput = note.title
-                                        contentInput = note.content
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Edit, contentDescription = "編輯"
+                                    Column(modifier = Modifier.padding(16.dp)) {
+
+                                        Text(
+                                            note.title,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold
                                         )
-                                    }
-                                    IconButton(onClick = {
-                                        scope.launch { noteDao.deleteNote(note) }
-                                    }) {
-                                        Icon(Icons.Default.Delete, contentDescription = "刪除")
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            note.content,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            horizontalArrangement = Arrangement.End,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            IconButton(onClick = {
+                                                editingNoteId = note.id
+                                                titleInput = note.title
+                                                contentInput = note.content
+                                                currentScreen = Screen.Edit
+                                            }) {
+                                                Icon(
+                                                    Icons.Default.Edit, contentDescription = "編輯"
+                                                )
+                                            }
+                                            IconButton(onClick = {
+                                                scope.launch { noteDao.deleteNote(note) }
+                                            }) {
+                                                Icon(Icons.Default.Delete, contentDescription = "刪除")
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+
+                    Screen.Edit -> {
+                        NoteEditorScreen(
+                            titleInput,
+                            contentInput,
+                            isEditMode = isEditMode,
+                            onSave = {
+                                if (titleInput.isBlank() && contentInput.isBlank()) {
+                                    return@NoteEditorScreen
+                                }
+                                scope.launch {
+                                    if (editingNoteId != null) {
+                                        val existingNote = notes.find { it.id == editingNoteId }
+                                        existingNote?.let {
+                                            noteDao.updateNote(
+                                                it.copy(
+                                                    title = titleInput,
+                                                    content = contentInput
+                                                )
+                                            )
+                                        }
+                                        editingNoteId = null
+                                    } else {
+                                        noteDao.insertNote(
+                                            Note(
+                                                id = Uuid.random().toString(),
+                                                title = titleInput,
+                                                content = contentInput
+                                            )
+                                        )
+                                    }
+                                    titleInput = ""
+                                    contentInput = ""
+                                    currentScreen = Screen.List
+                                }
+                            },
+                            onClose = {
+                                currentScreen = Screen.List
+                            },
+                            onTitleChange = {
+                                titleInput = it
+                            },
+                            onContentChange = {
+                                contentInput = it
+                            }
+                        )
                     }
                 }
             }
-
-
         }
     }
 }
+
 
 @Composable
 private fun NoteEditorScreen(
@@ -183,16 +205,22 @@ private fun NoteEditorScreen(
     content: String,
     isEditMode: Boolean,
     onSave: () -> Unit,
+    onClose: () -> Unit,
     onTitleChange: (String) -> Unit,
     onContentChange: (String) -> Unit
 ) {
-
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(24.dp)
     ) {
+        IconButton(
+            onClick = onClose,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Icon(Icons.Default.Close, contentDescription = "關閉")
+        }
+
         TextField(
             value = title,
             label = { Text("標題") },
