@@ -45,9 +45,7 @@ enum class Screen { List, Edit }
 @Preview
 fun App() {
     val db = remember {
-        getDatabaseBuilder()
-            .setDriver(BundledSQLiteDriver())
-            .fallbackToDestructiveMigration(true)
+        getDatabaseBuilder().setDriver(BundledSQLiteDriver()).fallbackToDestructiveMigration(true)
             .build()
     }
     val noteDao = remember { db.noteDao() }
@@ -69,19 +67,14 @@ fun App() {
                             currentScreen = Screen.Edit
                             titleInput = ""
                             contentInput = ""
-                        }
-                    ) {
+                        }) {
                         Icon(Icons.Default.Add, contentDescription = "新增筆記")
                     }
                 }
-            }
-        ) { innerPadding ->
+            }) { innerPadding ->
             Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .padding(24.dp)
-            )
-            {
+                modifier = Modifier.padding(innerPadding).padding(24.dp)
+            ) {
                 Text(
                     "My Note",
                     style = MaterialTheme.typography.headlineMedium,
@@ -98,9 +91,7 @@ fun App() {
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(
-                                notes,
-                                key = { it.id }
-                            ) { note ->
+                                notes, key = { it.id }) { note ->
                                 Card(
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -137,7 +128,10 @@ fun App() {
                                             IconButton(onClick = {
                                                 scope.launch { noteDao.deleteNote(note) }
                                             }) {
-                                                Icon(Icons.Default.Delete, contentDescription = "刪除")
+                                                Icon(
+                                                    Icons.Default.Delete,
+                                                    contentDescription = "刪除"
+                                                )
                                             }
                                         }
                                     }
@@ -161,8 +155,7 @@ fun App() {
                                         existingNote?.let {
                                             noteDao.updateNote(
                                                 it.copy(
-                                                    title = titleInput,
-                                                    content = contentInput
+                                                    title = titleInput, content = contentInput
                                                 )
                                             )
                                         }
@@ -189,8 +182,7 @@ fun App() {
                             },
                             onContentChange = {
                                 contentInput = it
-                            }
-                        )
+                            })
                     }
                 }
             }
@@ -210,13 +202,10 @@ private fun NoteEditorScreen(
     onContentChange: (String) -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp)
+        modifier = Modifier.fillMaxWidth().padding(24.dp)
     ) {
         IconButton(
-            onClick = onClose,
-            modifier = Modifier.align(Alignment.End)
+            onClick = onClose, modifier = Modifier.align(Alignment.End)
         ) {
             Icon(Icons.Default.Close, contentDescription = "關閉")
         }
@@ -237,8 +226,7 @@ private fun NoteEditorScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(
-            onClick = onSave,
-            modifier = Modifier.align(Alignment.End)
+            onClick = onSave, modifier = Modifier.align(Alignment.End)
         ) {
             Text(if (isEditMode) "Save" else "Add")
         }
