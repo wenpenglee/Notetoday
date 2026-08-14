@@ -190,7 +190,6 @@ fun App() {
     }
 }
 
-
 @Composable
 private fun NoteEditorScreen(
     title: String,
