@@ -85,59 +85,18 @@ fun App() {
 
                 when (currentScreen) {
                     Screen.List -> {
-                        LazyVerticalGrid(
-                            columns = GridCells.Adaptive(minSize = 160.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(
-                                notes, key = { it.id }) { note ->
-                                Card(
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                    ),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-
-                                        Text(
-                                            note.title,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            note.content,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Row(
-                                            horizontalArrangement = Arrangement.End,
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            IconButton(onClick = {
-                                                editingNoteId = note.id
-                                                titleInput = note.title
-                                                contentInput = note.content
-                                                currentScreen = Screen.Edit
-                                            }) {
-                                                Icon(
-                                                    Icons.Default.Edit, contentDescription = "編輯"
-                                                )
-                                            }
-                                            IconButton(onClick = {
-                                                scope.launch { noteDao.deleteNote(note) }
-                                            }) {
-                                                Icon(
-                                                    Icons.Default.Delete,
-                                                    contentDescription = "刪除"
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
+                        NoteListScreen(
+                            notes = notes,
+                            onEditClick = { note ->
+                                editingNoteId = note.id
+                                titleInput = note.title
+                                contentInput = note.content
+                                currentScreen = Screen.Edit
+                            },
+                            onDeleteClick = { note ->
+                                scope.launch { noteDao.deleteNote(note) }
                             }
-                        }
+                        )
                     }
 
                     Screen.Edit -> {
@@ -183,6 +142,64 @@ fun App() {
                             onContentChange = {
                                 contentInput = it
                             })
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NoteListScreen(
+    notes: List<Note>,
+    onEditClick: (Note) -> Unit,
+    onDeleteClick: (Note) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 160.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(
+            notes, key = { it.id }) { note ->
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+
+                    Text(
+                        note.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        note.content,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        IconButton(onClick = {
+                            onEditClick(note)
+                        }) {
+                            Icon(
+                                Icons.Default.Edit, contentDescription = "編輯"
+                            )
+                        }
+                        IconButton(onClick = {
+                            onDeleteClick(note)
+                        }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "刪除"
+                            )
+                        }
                     }
                 }
             }
